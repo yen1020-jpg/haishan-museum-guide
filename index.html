@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>海山生態博物館導覽</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;700;900&display=swap');
+        body { font-family: 'Noto Serif TC', serif; }
+        .transition-transform { transition: transform 0.3s ease; }
+        #app-content.h-full { height: 100%; }
+
+        /* 1. 首頁背景圖樣式 */
+        .landing-bg {
+    /* 圖片設定不變 */
+    background-image: url('./landing-bg.jpg'); 
+    background-size: cover;
+    background-position: bottom center;
+    background-attachment: fixed;
+    
+    /* VVVV 關鍵修正：確保圖片不會被其他背景色遮擋 VVVV */
+    background-color: transparent !important; 
+    /* ^^^^ 關鍵修正 ^^^^ */
+}
+        
+        /* 圖片裁切設定 */
+        .img-cover-top { object-fit: cover; object-position: center top; }
+        .img-cover-bottom { object-fit: cover; object-position: center bottom; }
+        .img-cover-center { object-fit: cover; object-position: center center; }
+
+        /* 圓圈圖示樣式 */
+        .circle-icon {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 2rem; height: 2rem; border-radius: 9999px;
+            background-color: #06B6D4; color: #F8FAFC;
+            font-size: 1rem; font-weight: bold; flex-shrink: 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'bg-main': '#0A192F',
+                        'bg-card': '#172A46',
+                        'bg-mid-card': '#34496b',
+                        'text-light': '#F8FAFC',
+                        'accent': '#06B6D4',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-bg-main text-text-light min-h-screen flex flex-col">
+
+    <nav class="sticky top-0 z-10 bg-bg-card shadow-xl border-b-2 border-accent/50">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <button id="back-btn" class="flex items-center text-text-light hover:text-accent transition duration-150 hidden" onclick="goBack()">
+                    <svg class="h-6 w-6 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    <span class="text-base font-medium hidden sm:inline">返回</span>
+                </button>
+                <div class="flex-shrink-0 flex-grow text-center sm:text-left">
+                    <span id="nav-title" class="text-xl font-extrabold text-text-light transition duration-300">海山生態博物館導覽</span>
+                </div>
+                <div class="w-12"></div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow p-4 sm:p-8 max-w-4xl mx-auto w-full">
+        <div id="app-content" class="bg-bg-card p-6 sm:p-10 rounded-3xl shadow-2xl border border-gray-700 min-h-[60vh] transition-transform">
+            </div>
+    </main>
+
+    <footer class="bg-bg-card/50 py-6 mt-auto border-t border-gray-700">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-text-light text-sm">© 2025 海山生態博物館。</p>
+        </div>
+    </footer>
+
+    <script>
+        // 資料設定
+        const XIANGSHAN_MAP_URL = "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d116315.65775432021!2d120.91698650000001!3d24.84716155!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x34685e1b21239c4d%3A0x8683c3486c4f305!2z5paw5puy5rW35bGx6a-s56ef!5e0!3m2!1szh-TW!2stw!4v1701700000000!5m2!1szh-TW!2stw";
+
+        const MUSEUM_DATA = {
+            "海與生活": {
+                "海山漁港": { description: "海山漁港是新竹著名的漁港之一，見證了在地漁業的變遷與發展，更是觀察夕陽與海景的絕佳地點。", timing: "🌅 最佳時間：日落時分。", map_url: XIANGSHAN_MAP_URL },
+                "定置漁場": { description: "定置漁場是一種永續的漁撈方式，利用地利與潮流捕捉洄游魚類，展現了人與海共存的智慧。", timing: "🐟 漁獲販賣：每天下午 2 點左右，可觀賞壯觀的魚瀑布。", map_url: XIANGSHAN_MAP_URL },
+                "香山濕地": { description: "香山濕地是重要的生態保護區，擁有豐富的底棲生物與水鳥資源。", timing: "🦢 觀察生態：退潮前後 2 小時。", map_url: XIANGSHAN_MAP_URL }
+            },
+            "信仰與文化": {
+                "水蓮宮": { description: "水蓮宮是當地重要的信仰中心，供奉媽祖，守護著討海人的平安。", timing: "🙏 參拜時間：白天時段。", map_url: XIANGSHAN_MAP_URL },
+                "香山天后宮": { description: "歷史悠久的香山天后宮，其建築工藝與歷史價值代表著客家與福佬文化融合的軌跡。", timing: "🙏 參拜時間：白天時段。", map_url: XIANGSHAN_MAP_URL }
+            },
+            "地方產業": {
+                "茶花園": { description: "新竹的氣候適合茶花生長，茶花園不僅是觀光景點，更是重要的花卉產業基地。", timing: "🌸 最佳花期：11 月至隔年 3 月。", map_url: XIANGSHAN_MAP_URL },
+                "咖啡豆": { description: "海山社區自家烘焙的咖啡豆，是由社區的「老臘肉」們親手沖泡的在地風味。", timing: "☕ 購買時間：請依海山社區發展協會營業時間前往。", map_url: XIANGSHAN_MAP_URL },
+                "定置漁場": { description: "（再次提及）定置漁場除了是漁撈方式，也是地方經濟產業的一環。", timing: "🐟 漁獲販賣：每天下午 2 點左右。", map_url: XIANGSHAN_MAP_URL },
+                "進士牧場": { description: "進士牧場是知名的乳牛牧場，提供新鮮乳製品。", timing: "🥛 營業時間：目前沒有開放參觀，可至香山農會、牛埔東路億客來購買產品。", map_url: XIANGSHAN_MAP_URL }
+            },
+            "多族群共構": {
+                "那魯灣": { description: "「那魯灣」代表著多族群融合的精神，是社區活動與交流的中心。", timing: "🤝 活動時間：請查詢在地社區公告。", map_url: XIANGSHAN_MAP_URL },
+                "發展協會中心": { description: "地方發展協會中心是推動社區營造和文化傳承的核心組織。", timing: "⏰ 建議時間：請於週間上班時間前往。", map_url: XIANGSHAN_MAP_URL }
+            }
+        };
+
+        const CATEGORY_ICONS = {
+            "海與生活": `<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8v8A4 4 4 0 0 1 8 16V8a4 4 4 0 0 1 8 0z"/><path d="M12 21V3"/><path d="M17 17l4 4"/><path d="M7 17l-4 4"/></svg>`,
+            "信仰與文化": `<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 7.42V20a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V10.42A6 6 0 0 0 12 3Z"/><path d="M9 22V8.5c0-.9.4-1.5 1-1.5c.6 0 1 .4 1 1v4m-1 0h2m-1 0v-4c0-.6.4-1 1-1h2c.6 0 1 .4 1 1v4"/></svg>`,
+            "地方產業": `<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v4c0 1.1.9 2 2 2h6c1.1 0 2-.9 2-2v-4"/><path d="M12 16v6"/><path d="M12 2v4"/><path d="M17 6h3a2 2 0 0 1 2 2v2"/><path d="M7 6H4a2 2 0 0 0-2 2v2"/><path d="M22 14v2a2 2 0 0 1-2 2h-3"/><path d="M2 14v2a2 2 0 0 0 2 2h3"/></svg>`,
+            "多族群共構": `<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`
+        };
+
+        const appContent = document.getElementById('app-content');
+        const navTitle = document.getElementById('nav-title');
+        const backBtn = document.getElementById('back-btn');
+        let historyStack = [];
+        let currentView = { id: 'landing', data: null };
+
+        // 頁面導航核心函式
+        function navigateTo(viewId, data = null) {
+            // 背景切換邏輯
+            if (viewId === 'landing') {
+                document.body.classList.add('landing-bg', 'bg-transparent');
+                document.body.classList.remove('bg-bg-main');
+            } else {
+                document.body.classList.remove('landing-bg', 'bg-transparent');
+                document.body.classList.add('bg-bg-main');
+            }
+
+            if (currentView.id !== viewId && viewId !== 'landing') {
+                historyStack.push({ view: currentView.id, data: currentView.data });
+            }
+            
+            // 清空容器
+            appContent.classList.remove('flex', 'items-center', 'justify-center', 'h-full');
+            appContent.innerHTML = '';
+            
+            currentView.id = viewId;
+            currentView.data = data;
+
+            // 根據 viewId 渲染對應內容
+            switch (viewId) {
+                case 'landing': renderLandingView(); break;
+                case 'home': renderHomeView(); break;
+                case 'category': renderCategoryView(data); break;
+                case 'detail': renderDetailView(data); break;
+                case 'routePlanningEntry': renderRoutePlanningEntry(data); break;
+                default: renderLandingView();
+            }
+            updateNavigation(viewId, data);
+        }
+
+        // 輔助函式：開啟路線規劃 (解決 HTML 屬性引號衝突問題)
+        function openRoutePlanning(categoryName) {
+            navigateTo('routePlanningEntry', { categoryName: categoryName });
+        }
+
+        function goBack() {
+            if (historyStack.length > 0) {
+                const previousState = historyStack.pop();
+                currentView.id = previousState.view;
+                currentView.data = previousState.data;
+                appContent.innerHTML = '';
+                
+                // 背景切換邏輯
+                if (currentView.id === 'landing') {
+                    document.body.classList.add('landing-bg', 'bg-transparent');
+                    document.body.classList.remove('bg-bg-main');
+                    appContent.classList.add('flex', 'items-center', 'justify-center', 'h-full');
+                } else {
+                    document.body.classList.remove('landing-bg', 'bg-transparent');
+                    document.body.classList.add('bg-bg-main');
+                    appContent.classList.remove('flex', 'items-center', 'justify-center', 'h-full');
+                }
+
+                switch (currentView.id) {
+                    case 'landing': renderLandingView(); break;
+                    case 'home': renderHomeView(); break;
+                    case 'category': renderCategoryView(currentView.data); break;
+                    case 'detail': renderDetailView(currentView.data); break;
+                    case 'routePlanningEntry': renderRoutePlanningEntry(currentView.data); break;
+                    default: renderLandingView();
+                }
+                updateNavigation(currentView.id, currentView.data);
+            }
+        }
+
+        function updateNavigation(viewId, data) {
+            backBtn.classList.add('hidden'); // 預設隱藏
+            if (viewId === 'landing') {
+                navTitle.textContent = "海山生態博物館";
+                historyStack = [];
+            } else if (viewId === 'home') {
+                navTitle.textContent = "海山生態博物館－從香山車站出發";
+            } else if (viewId === 'category') {
+                navTitle.textContent = data.categoryName;
+                backBtn.classList.remove('hidden');
+            } else if (viewId === 'detail') {
+                navTitle.textContent = data.locationName;
+                backBtn.classList.remove('hidden');
+            } else if (viewId === 'routePlanningEntry') {
+                navTitle.textContent = `${data.categoryName} - 路線規劃`;
+                backBtn.classList.remove('hidden');
+            }
+        }
+
+        // --- View Renders ---
+
+        function renderLandingView() {
+            appContent.classList.add('flex', 'items-center', 'justify-center', 'h-full');
+            const content = `
+                <header class="text-center p-8 rounded-2xl bg-bg-card/90 backdrop-blur-sm shadow-2xl">
+                    <h1 class="text-5xl sm:text-6xl font-extrabold text-text-light mb-6">海山生態博物館</h1>
+                    <p class="text-xl text-text-light mb-12">探索香山地區豐富的生態、歷史與人文脈絡。</p>
+                    <button onclick="navigateTo('home')" class="inline-flex items-center py-4 px-10 text-xl font-bold rounded-full shadow-2xl text-text-light bg-accent hover:bg-teal-400 transition duration-300 transform hover:scale-[1.05] active:scale-100 ring-4 ring-accent/50 ring-offset-bg-card ring-offset-2">
+                        從香山車站出發
+                        <svg class="h-6 w-6 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                    </button>
+                </header>
+            `;
+            appContent.innerHTML = content;
+        }
+        
+        function renderHomeView() {
+            const header = `
+                <header class="text-center mb-12">
+                    <h1 class="text-4xl sm:text-5xl font-extrabold text-text-light mb-2">選擇想要的主題</h1>
+                    <p class="text-lg text-text-light">點擊主題卡片，深入探索海山生態博物館的核心價值。</p>
+                </header>
+            `;
+            appContent.insertAdjacentHTML('beforeend', header);
+
+            const categories = Object.keys(MUSEUM_DATA);
+            const categorySection = document.createElement('div');
+            categorySection.className = 'grid grid-cols-1 md:grid-cols-2 gap-8 mb-16';
+            
+            categories.forEach(category => {
+                const icon = CATEGORY_ICONS[category] || '';
+                const button = document.createElement('button');
+                button.className = 'flex flex-col items-center justify-center p-8 text-center rounded-2xl shadow-xl border-t-8 border-accent bg-bg-mid-card text-text-light hover:bg-bg-mid-card/80 transition duration-300 transform hover:scale-[1.03] active:scale-100';
+                button.innerHTML = `<div class="text-text-light mb-3">${icon}</div><span class="text-2xl font-bold">${category}</span><p class="text-base text-text-light mt-1">點擊進入 ${category} 主題</p>`;
+                button.onclick = () => navigateTo('category', { categoryName: category });
+                categorySection.appendChild(button);
+            });
+            appContent.appendChild(categorySection);
+
+            // 留言板區塊
+            const messageBoardSection = `
+                <section class="p-8 bg-bg-mid-card/50 rounded-2xl text-text-light shadow-2xl border border-accent/30">
+                    <h2 class="text-3xl font-bold mb-6 text-center border-b border-accent/50 pb-3">💬 留言板與建議區</h2>
+                    <form id="message-form" onsubmit="handleMessageSubmit(event)" class="space-y-4">
+                        <div>
+                            <label for="message-name" class="block text-lg font-medium text-text-light mb-2">您的名稱 (選填):</label>
+                            <input type="text" id="message-name" placeholder="匿名訪客" class="w-full p-3 rounded-lg border border-gray-600 bg-bg-card text-text-light placeholder-gray-500 focus:ring-accent focus:border-accent" />
+                        </div>
+                        <div>
+                            <label for="message-content" class="block text-lg font-medium text-text-light mb-2">您的留言/建議:</label>
+                            <textarea id="message-content" rows="4" required placeholder="請分享您的參觀心得或建議..." class="w-full p-3 rounded-lg border border-gray-600 bg-bg-card text-text-light placeholder-gray-500 focus:ring-accent focus:border-accent"></textarea>
+                        </div>
+                        <button type="submit" class="w-full flex items-center justify-center py-3 px-6 text-lg font-bold rounded-xl shadow-lg text-text-light bg-accent hover:bg-teal-400 transition duration-300 transform hover:scale-[1.01] active:scale-100 ring-2 ring-offset-2 ring-accent/50 ring-offset-bg-card">
+                            送出留言
+                        </button>
+                    </form>
+                </section>
+            `;
+            appContent.insertAdjacentHTML('beforeend', messageBoardSection);
+        }
+
+        function renderCategoryView(data) {
+            const { categoryName } = data;
+            const locations = MUSEUM_DATA[categoryName] || {};
+            
+            const header = `<header class="mb-10"><h1 class="text-3xl font-extrabold text-text-light mb-2">${categoryName}</h1><p class="text-lg text-text-light">請選擇您想深入了解的地點。</p></header>`;
+            appContent.insertAdjacentHTML('beforeend', header);
+            
+            const listContainer = document.createElement('div');
+            listContainer.className = 'space-y-4';
+            Object.keys(locations).forEach(locationName => {
+                const button = document.createElement('button');
+                button.className = 'flex items-center justify-between w-full p-5 text-left text-xl font-semibold rounded-xl shadow-md border border-gray-700 bg-bg-mid-card text-text-light hover:bg-bg-mid-card/80 hover:border-accent transition duration-200 transform hover:translate-x-1';
+                button.innerHTML = `<span>${locationName}</span><svg class="h-6 w-6 ml-2 text-text-light" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>`;
+                button.onclick = () => navigateTo('detail', { categoryName, locationName, detailsObject: locations[locationName] });
+                listContainer.appendChild(button);
+            });
+            appContent.appendChild(listContainer);
+
+            // 路線規劃按鈕 (使用新函式 openRoutePlanning 避免引號錯誤)
+            if (['地方產業', '海與生活', '信仰與文化', '多族群共構'].includes(categoryName)) { 
+                const routeButtonHtml = `
+                    <div class="pt-6">
+                        <button onclick="openRoutePlanning('${categoryName}')"
+                                class="flex items-center justify-center w-full p-4 text-xl font-bold rounded-xl shadow-2xl text-text-light bg-accent hover:bg-teal-400 transition duration-300 transform hover:scale-[1.01] active:scale-100 ring-4 ring-accent/50 ring-offset-bg-card ring-offset-2">
+                            <svg class="h-6 w-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l3-3m0 0l3 3m-3-3v-5m0 0v-5m0 5h5m-5 0h-5m5 0a9 9 0 110-18 9 9 0 010 18z"></path></svg>
+                            規劃 ${categoryName} 路線
+                        </button>
+                        <p class="text-sm text-center text-gray-400 mt-2">點擊進入路線規劃入口，選擇目的地。</p>
+                    </div>
+                `;
+                appContent.insertAdjacentHTML('beforeend', routeButtonHtml);
+            }
+        }
+
+        function renderDetailView(data) {
+    const { locationName, detailsObject } = data;
+    const detail = detailsObject.description;
+    const timing = detailsObject.timing;
+    // VVVV 確保這行存在並正確 VVVV
+    const mapUrl = detailsObject.map_url; // 從資料物件中取得地圖 URL
+    // ^^^^ 確保這行存在並正確 ^^^^
+
+    let imageUrl = '';
+    let imageClass = 'img-cover-top';
+    
+    // 圖片選擇邏輯
+    if (locationName === '海山漁港') { imageUrl = 'IMG_8277.jpg'; imageClass = 'img-cover-bottom'; }
+    else if (locationName === '定置漁場') { imageUrl = 'IMG_0030.jpg'; imageClass = 'img-cover-center'; }
+    else if (locationName === '茶花園') { imageUrl = 'store_teaflower.jpg'; imageClass = 'img-cover-bottom'; }
+    else if (locationName === '咖啡豆') { imageUrl = 'store_coffee.jpg'; imageClass = 'img-cover-bottom'; }
+    else if (locationName === '進士牧場') { imageUrl = 'store_jinshi.jpg'; imageClass = 'img-cover-center'; }
+    else if (locationName === '香山濕地') { imageUrl = 'beach.jpg'; imageClass = 'img-cover-center'; }
+    else { imageUrl = `https://placehold.co/800x400/34496b/ffffff?text=${locationName}`; }
+
+    let imageHtml = `
+        <img src="${imageUrl}" alt="${locationName}" class="w-full h-64 sm:h-80 rounded-xl shadow-lg ${imageClass}" onerror="this.src='https://placehold.co/800x400/34496b/ffffff?text=圖片載入失敗';">
+    `;
+
+    let timingHtml = '';
+    if (timing) {
+        timingHtml = `
+            <h2 class="text-2xl font-bold text-text-light pt-4 border-t border-gray-700">🧭 最佳參觀時間</h2>
+            <div class="p-4 bg-accent/20 border-l-4 border-accent rounded-xl text-lg shadow-md">
+                <p class="text-text-light">${timing}</p>
+            </div>
+        `;
+    }
+    
+    // 關鍵的地圖 HTML 區塊
+    let mapHtml = '';
+    if (mapUrl) {
+        mapHtml = `
+            <h2 class="text-2xl font-bold text-text-light pt-4 border-t border-gray-700">🗺️ 地點地圖</h2>
+            <div class="h-80 w-full overflow-hidden rounded-xl shadow-xl border-4 border-accent/50 bg-bg-mid-card">
+                <iframe src="${mapUrl}" // 這裡使用正確的 mapUrl
+                        width="100%" height="100%" style="border:0;" 
+                        allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade" 
+                        class="rounded-lg">
+                </iframe>
+            </div>
+            <p class="text-sm text-gray-400 italic mt-2">地圖顯示為概略位置，點擊進入Google地圖可查看路線。</p>
+        `;
+    }
+    
+    const content = `
+        <header class="mb-8 border-b-2 border-accent/50 pb-4">
+            <h1 class="text-4xl font-extragold text-text-light mb-2">${locationName}</h1>
+            <p class="text-lg text-text-light font-medium">主題分類：${data.categoryName}</p>
+        </header>
+        
+        <div class="text-lg leading-relaxed text-text-light space-y-6">
+            ${imageHtml}
+            
+            <h2 class="text-2xl font-bold text-text-light pt-4 border-t border-gray-700">地點介紹</h2>
+            <p class="text-text-light">${detail}</p>
+            
+            ${timingHtml}
+            
+            ${mapHtml} <div class="p-4 bg-yellow-900/30 border-l-4 border-yellow-600 rounded-xl italic text-base shadow-sm">
+                <p class="font-semibold text-yellow-300 mb-1">💡 編輯提示：</p>
+                <p class="text-yellow-400">您可以編輯程式碼中的 "MUSEUM_DATA" 來修改這段介紹文字或時間資訊。</p>
+            </div>
+        </div>
+    `;
+    appContent.insertAdjacentHTML('beforeend', content);
+}
+
+        function renderRoutePlanningEntry(data) {
+            const { categoryName } = data;
+            const locations = MUSEUM_DATA[categoryName] || {};
+            
+            let optionsHtml = '<option value="" disabled selected>請選擇一個目的地...</option>';
+            Object.keys(locations).forEach(loc => {
+                optionsHtml += `<option value="${loc}">${loc}</option>`;
+            });
+
+            const content = `
+                <header class="mb-10 text-center">
+                    <h1 class="text-3xl font-extrabold text-text-light mb-4">${categoryName} - 路線規劃</h1>
+                    <p class="text-lg text-text-light">選擇您的目的地，我們將為您開啟導航。</p>
+                </header>
+
+                <div class="max-w-md mx-auto bg-bg-mid-card p-8 rounded-2xl shadow-2xl border border-gray-700">
+                    <div class="mb-6">
+                        <label for="destination-select" class="block text-lg font-medium text-text-light mb-2">目的地</label>
+                        <select id="destination-select" class="w-full p-4 rounded-xl border border-gray-600 bg-bg-card text-text-light focus:ring-4 focus:ring-accent/50 focus:border-accent appearance-none text-lg">
+                            ${optionsHtml}
+                        </select>
+                    </div>
+                    <button onclick="planRoute()" class="w-full py-4 text-xl font-bold rounded-xl shadow-lg text-text-light bg-accent hover:bg-teal-400 transition duration-300 transform hover:scale-[1.02] active:scale-100 ring-2 ring-accent ring-offset-2 ring-offset-bg-card">
+                        📍 開啟 Google 地圖導航
+                    </button>
+                    <div id="route-message" class="mt-6 p-4 rounded-xl text-center text-lg font-medium hidden"></div>
+                </div>
+            `;
+            appContent.insertAdjacentHTML('beforeend', content);
+        }
+
+        function planRoute() {
+            const select = document.getElementById('destination-select');
+            const message = document.getElementById('route-message');
+
+            if (!select || !select.value) {
+                 message.textContent = '❌ 請先選擇一個有效地點。';
+                 message.className = 'mt-6 p-4 rounded-xl text-center text-lg font-medium bg-red-900/50 text-red-200 border border-red-500 block';
+                return;
+            }
+
+            const selectedText = select.options[select.selectedIndex].text;
+            const destinationName = select.value;
+            const encodedDestination = encodeURIComponent(destinationName);
+
+            // 【修復】使用標準 Google Maps 導航連結
+            const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodedDestination}&travelmode=driving`;
+            
+            window.open(mapsUrl, '_blank');
+            
+            message.innerHTML = `✅ 已為 <b>${selectedText}</b> 開啟 Google 地圖！`;
+            message.className = 'mt-6 p-4 rounded-xl text-center text-lg font-medium bg-green-900/50 text-green-200 border border-green-500 block';
+        }
+
+        function handleMessageSubmit(event) {
+            event.preventDefault(); 
+            const nameInput = document.getElementById('message-name').value || '匿名訪客';
+            const contentInput = document.getElementById('message-content').value;
+
+            if (contentInput.trim() === '') {
+                alert('❌ 留言內容不能為空！');
+                return;
+            }
+            alert(`✅ 感謝您的留言，${nameInput}！\n我們已收到您的建議。`);
+            document.getElementById('message-form').reset();
+        }
+
+        // 初始化
+        renderLandingView();
+    </script>
+</body>
+</html>
